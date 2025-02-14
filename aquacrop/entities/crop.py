@@ -186,6 +186,22 @@ class Crop:
 
         self.calculate_additional_params()
 
+    def update_params(self, crop_param, c_name):
+        """
+        Update the param of the crop according to the input param
+        Args:
+            crop_param:
+            c_name:
+
+        Returns:
+
+        """
+        self.__dict__.update(
+            (k, v) for k, v in crop_param[c_name].items()
+        )
+
+        self.calculate_additional_params()
+
     def calculate_additional_params(
         self,
     ):

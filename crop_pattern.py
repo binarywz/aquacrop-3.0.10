@@ -1,13 +1,14 @@
 from aquacrop import AquaCropModel, Soil, Crop, InitialWaterContent
 from aquacrop.utils import prepare_weather, get_filepath
 import pandas as pd
+import os
 
-if __name__ == '__main__':
-    weather = pd.read_excel("weather.xlsx")
-    weather.to_csv('aquacrop/data/weather.txt', sep='\t', index=False)
-    weather_file_path = get_filepath('weather.txt')
+def crop_pattern(data_path, file_name):
+    weather = pd.read_excel(data_path)
+    weather.to_csv('aquacrop/data/' + file_name + '.txt', sep='\t', index=False)
+    weather_file_path = get_filepath(file_name + '.txt')
     pattern_data = {}
-    for pattern_row in pd.read_excel('plant_pattern.xlsx').values:
+    for pattern_row in pd.read_excel('data/plant_pattern.xlsx').values:
         if pattern_row[0] not in pattern_data.keys():
             aux_list = [pattern_row]
             pattern_data[pattern_row[0]] = aux_list
@@ -35,6 +36,7 @@ if __name__ == '__main__':
             for cycle in pattern[cycle_key]:
                 print(cycle)
                 sim_crop = Crop(cycle[2], planting_date=cycle[6])
+                sim_crop.update_params(parse_crop_param(), cycle[2])
                 sim_crop.WP = sim_crop.WP * cycle[-1]
                 model_os = AquaCropModel(
                     sim_start_time=cycle[4],
@@ -72,11 +74,34 @@ if __name__ == '__main__':
         else:
             pattern_results = pd.concat([pattern_results, aux_sim_result], ignore_index=True)
 
-
     # 使用ExcelWriter
-    with pd.ExcelWriter("pattern_simulation.xlsx", engine='xlsxwriter') as writer:
+    with pd.ExcelWriter("data/output/" + file_name + ".xlsx", engine='xlsxwriter') as writer:
         pattern_results.to_excel(writer, sheet_name='pattern_sim', index=False)
         final_output.to_excel(writer, sheet_name='model_results', index=False)
         crop_growth.to_excel(writer, sheet_name='crop_growth', index=False)
         water_contents.to_excel(writer, sheet_name='water_contents', index=False)
         water_fluxes.to_excel(writer, sheet_name='water_fluxes', index=False)
+
+def parse_crop_param():
+    crop_param_data = pd.read_excel('data/crop_param.xlsx', header=None).values
+    crop_param = {}
+    for col in range(crop_param_data.shape[1]):
+        if col == 0:
+            continue
+        crop_param[crop_param_data[0, col]] = {}
+        for row in range(crop_param_data.shape[0]):
+            if pd.isna(crop_param_data[row, col]):
+                continue
+            crop_param[crop_param_data[0, col]][crop_param_data[row, 0]] = crop_param_data[row, col]
+    return crop_param
+
+
+
+if __name__ == '__main__':
+    weather_data_path = 'data/weather'
+    if os.path.exists(weather_data_path) and os.path.isdir(weather_data_path):
+        for dirpath, dirnames, filenames in os.walk(weather_data_path):
+            for filename in filenames:
+                crop_pattern(dirpath + '/' + filename, filename.split('.')[0])
+    else:
+        print(f"'{weather_data_path}' 文件夹不存在。")
