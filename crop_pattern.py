@@ -34,12 +34,14 @@ if __name__ == '__main__':
         for cycle_key in pattern.keys():
             for cycle in pattern[cycle_key]:
                 print(cycle)
+                sim_crop = Crop(cycle[2], planting_date=cycle[6])
+                sim_crop.WP = sim_crop.WP * cycle[-1]
                 model_os = AquaCropModel(
                     sim_start_time=cycle[4],
                     sim_end_time=cycle[5],
                     weather_df=prepare_weather(weather_file_path),
                     soil=Soil(soil_type=cycle[3]),
-                    crop=Crop(cycle[2], planting_date=cycle[6]),
+                    crop=sim_crop,
                     initial_water_content=InitialWaterContent(value=['FC']),
                 )
                 model_os.run_model(till_termination=True)

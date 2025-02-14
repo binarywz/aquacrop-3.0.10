@@ -68,6 +68,7 @@ class Crop:
             0.001165  # WP co2 adjustment parameter given by FACE experiments
         )
         self.SwitchGDDType = 1 # calculate GDD phenology based on mean of CD phenology across entire simulation period (mean/median)
+        self.WP = 0.0
 
         if c_name == "custom":
 
